@@ -37,20 +37,22 @@ services:
             - ENABLE_RECORDING
         networks:
             # traefik: change the following line to your external docker network 
-            web:
+            traefik-net:
             meet.jitsi:
                 aliases:
                     - ${XMPP_DOMAIN}
         labels:
+            traefik.enable: 'true'
+            traefik.docker.network: traefik-net
             traefik.http.middlewares.redirect.redirectscheme.scheme: https
-            traefik.http.routers.app-http.entrypoints: web
-            traefik.http.routers.app-http.middlewares: redirect
-            traefik.http.routers.app-http.rule: 'Host(`your.host.name`)'
-            traefik.http.routers.app.entrypoints: websecure
-            traefik.http.routers.app.rule: 'Host(`your.host.name`)'
-            traefik.http.routers.app.tls: 'true'
-            traefik.http.routers.app.tls.certresolver: le
-            traefik.http.services.app.loadbalancer.server.port: 80
+            traefik.http.routers.jitsi-http.entrypoints: http
+            traefik.http.routers.jitsi-http.middlewares: redirect
+            traefik.http.routers.jitsi-http.rule: 'Host(`jitsi.domain.tld`)'
+            traefik.http.routers.jitsi-https.entrypoints: https
+            traefik.http.routers.jitsi-https.rule: 'Host(`jitsi.domain.tld`)'
+            traefik.http.routers.jitsi-https.tls: 'true'
+            traefik.http.routers.jitsi-https.tls.certresolver: your_certresolver
+            traefik.http.services.jitsi-https.loadbalancer.server.port: 80
 
     # XMPP server
     prosody:
@@ -166,14 +168,10 @@ services:
             - prosody
         networks:
             meet.jitsi:
-        labels:
-            traefik.udp.routers.jvb.entrypoints: video
-            traefik.udp.routers.jvb.service: jvb
-            traefik.udp.services.jvb.loadbalancer.server.port: 10000
 
 # Custom network so all services can communicate using a FQDN
 networks:
     meet.jitsi:
     # traefik: change the following line to your external docker network 
-    web:
+    traefik-net:
         external: true
